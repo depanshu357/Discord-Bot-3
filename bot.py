@@ -3,13 +3,13 @@ import requests
 import json
 import os
 from dotenv import load_dotenv
+
 load_dotenv()
 
 TOKEN = os.getenv('TOKEN')
 XRapidAPIKeyGlobalQuotes = os.getenv('XRapidAPIKeyGlobalQuotes')
-XRapidAPIKEYStockPrices=os.getenv('XRapidAPIKEYStockPrices')
-XRapidAPIKEYWeatherUpdates=os.getenv('XRapidAPIKEYWeatherUpdates')
-
+XRapidAPIKEYStockPrices = os.getenv('XRapidAPIKEYStockPrices')
+XRapidAPIKEYWeatherUpdates = os.getenv('XRapidAPIKEYWeatherUpdates')
 
 
 def update_in_database(data):
@@ -73,11 +73,21 @@ def get_stock_prices():
     return json_data
 
 
-def get_weather_updates():
+def get_weather_updates(message="$weather-updates Kanpur India"):
+    message = message.split(" ")
+    print(message)
+    print(type(message))
+    print(len(message))
     url = "https://visual-crossing-weather.p.rapidapi.com/forecast"
 
-    querystring = {"aggregateHours": "24", "location": "Kanpur,India", "contentType": "json", "unitGroup": "us",
-                   "shortColumnNames": "0"}
+    if (len(message) == 3):
+        querystring = {"aggregateHours": "24", "location": f"{message[1]},{message[2]}", "contentType": "json",
+                       "unitGroup": "us",
+                       "shortColumnNames": "0"}
+    else:
+        querystring = {"aggregateHours": "24", "location": "Kanpur,India", "contentType": "json",
+                       "unitGroup": "us",
+                       "shortColumnNames": "0"}
 
     headers = {
         "X-RapidAPI-Key": XRapidAPIKEYWeatherUpdates,
@@ -86,7 +96,6 @@ def get_weather_updates():
 
     response = requests.request("GET", url, headers=headers, params=querystring)
     json_data = json.loads(response.text)
-
     # print(response.text)
     # print(type(response.text))
     # print(json_data)
@@ -114,7 +123,7 @@ def run_discord_bot():
             return
 
         if message.content.startswith('$help'):
-            string = "$weather-updates - to get updates about weather in Kanpur,India \n $get-stock-prices - to get upadtes about NIFTY stomks \n $add - to add data to the database of the Bot which can be accessed later \n$retrieve_data - to get data from database which has been added through '$add' \n $help-to show all Bot commands"
+            string = "$weather-updates - to get updates about weather in Kanpur,India \n$weather-updates City Country - to get updates about the weather in City, Country\n $get-stock-prices - to get upadtes about NIFTY stomks \n $add - to add data to the database of the Bot which can be accessed later \n$retrieve_data - to get data from database which has been added through '$add' \n $help-to show all Bot commands"
             await message.channel.send(string)
 
         if message.content.startswith('$hello'):
@@ -155,7 +164,7 @@ def run_discord_bot():
             #     await message.channel.send(string)
 
         if message.content.startswith('$weather-updates'):
-            json_data = get_weather_updates()
+            json_data = get_weather_updates(message.content)
             for data in json_data:
                 # print(data)
                 # print(type(data))
